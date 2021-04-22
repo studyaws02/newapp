@@ -1,3 +1,4 @@
+  
 node{
    stage('SCM Checkout'){
      git 'https://github.com/studyaws02/newapp.git'
@@ -8,15 +9,15 @@ node{
       sh "${mvnHome}/bin/mvn clean package"
 	  sh 'mv target/myweb*.war target/newapp.war'
    }
+   stage('Build Docker Imager'){
+   sh 'docker build -t studyaws02/dinesh:0.0.3 .'
+   }
    stage('SonarQube Analysis') {
 	        def mvnHome =  tool name: 'maven3', type: 'maven'
 	        withSonarQubeEnv('sonar') { 
 	          sh "${mvnHome}/bin/mvn sonar:sonar"
 	        }
 	    }
-   stage('Build Docker Imager'){
-   sh 'docker build -t studyaws02/dinesh:0.0.3 .'
-   }
    stage('Docker Image Push'){
    withCredentials([string(credentialsId: 'dockerPass', variable: 'dockerPassword')]) {
    sh "docker login -u studyaws02 -p ${dockerPassword}"
@@ -24,9 +25,9 @@ node{
    sh 'docker push studyaws02/dinesh:0.0.3'
    }
    stage('Nexus Image Push'){
-   sh "docker login -u admin -p admin123 13.127.98.228:8083"
-   sh "docker tag saidamo/myweb:0.0.2 13.127.98.228:8083/damo:1.0.0"
-   sh 'docker push 13.127.98.228:8083/damo:1.0.0'
+   sh "docker login -u admin -p admin123 172.31.69.179:8083"
+   sh "docker tag studyaws02/dinesh:0.0.3 172.31.69.179:8083/studyaws02:1.0.0"
+   sh 'docker push 172.31.69.179:8083/studyaws02:1.0.0'
    }
    stage('Remove Previous Container'){
 	try{
@@ -37,5 +38,5 @@ node{
    stage('Docker deployment'){
    sh 'docker run -d -p 8090:8080 --name tomcattest studyaws02/dinesh:0.0.3' 
    }
-}
+   }
 }
